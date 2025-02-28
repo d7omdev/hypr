@@ -15,6 +15,11 @@ charging_icon="󰂄"
 # Calculate the index for the icon array
 icon_index=$((battery_percentage / 10))
 
+# Ensure the index is within the bounds of the array
+if [ "$icon_index" -ge "${#battery_icons[@]}" ]; then
+	icon_index=$((${#battery_icons[@]} - 1))
+fi
+
 # Get the corresponding icon
 battery_icon=${battery_icons[icon_index]}
 
