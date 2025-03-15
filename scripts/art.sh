@@ -102,6 +102,10 @@ fetch_current_album_art() {
 	mv "$tmp_history" "$HISTORY_FILE"
 	cleanup_cache
 
+	if [ ! -f "$art_file" ]; then
+		art_file="$FALLBACK_IMAGE"
+	fi
+
 	echo "$art_file"
 }
 
