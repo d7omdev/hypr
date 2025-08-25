@@ -1,7 +1,11 @@
-$text_color = rgba(FFDAD6FF)
+# Import colors from main colors.conf
+source = ~/.config/hypr/hyprland/colors.conf
+
+# Hyprlock specific color overrides
+$text_color = $text
 $entry_background_color = rgba(41000311)
 $entry_border_color = rgba(896E6C55)
-$entry_color = rgba(FFDAD6FF)
+$entry_color = $text
 $font_family = Rubik Light
 $font_family_clock = Rubik Light
 $font_material_symbols = Material Symbols Rounded
