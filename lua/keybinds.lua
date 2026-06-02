@@ -233,4 +233,6 @@ hl.bind("CTRL + " .. SUPER .. " + Backslash", hl.dsp.exec_raw("resizeactive exac
 
 ------------- PLUGINS -------------
 -- hyprexpo plugin dispatcher — plugin-registered names go through exec_raw.
-hl.bind(SUPER .. " + Tab", hl.dsp.exec_raw("hyprexpo:expo, toggle"))
+hl.bind("SUPER + Tab", function()
+	hl.plugin.hyprexpo.expo("toggle")
+end)
