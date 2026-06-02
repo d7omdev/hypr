@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "runtime": {
+    "version": "Lua 5.4",
+    "path": ["?.lua", "?/init.lua", "lua/?.lua", "lua/?/init.lua"]
+  },
+  "workspace": {
+    "library": ["/usr/share/hypr/stubs"],
+    "checkThirdParty": false,
+    "ignoreDir": [".git", "hyprland.lua.draft"]
+  },
+  "diagnostics": {
+    "globals": ["hl"],
+    "disable": ["lowercase-global"]
+  },
+  "telemetry": {
+    "enable": false
+  }
+}

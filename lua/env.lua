@@ -1,0 +1,17 @@
+-- Environment variables. Maps from hyprland/env.conf.
+-- API: hl.env(NAME, VALUE)
+
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+
+hl.env("XDG_DATA_DIRS",
+    os.getenv("HOME") .. "/.local/share/flatpak/exports/share:" ..
+    "/var/lib/flatpak/exports/share:/usr/local/share:/usr/share")
+
+hl.env("QT_QPA_PLATFORM",      "wayland;xcb")
+hl.env("QT_QPA_PLATFORMTHEME", "kde")
+hl.env("XDG_MENU_PREFIX",      "plasma-")
+
+hl.env("ILLOGICAL_IMPULSE_VIRTUAL_ENV",
+    os.getenv("HOME") .. "/.local/state/quickshell/.venv")
+
+hl.env("TERMINAL", "kitty -1")

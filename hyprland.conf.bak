@@ -20,3 +20,7 @@ source=custom/general.conf
 source=custom/rules.conf
 source=custom/keybinds.conf
 
+source = hyprland-gui.conf
+
+# HyprMod managed settings
+source = /home/d7om/.config/hypr/hyprland-gui.conf
