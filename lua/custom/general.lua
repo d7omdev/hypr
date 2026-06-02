@@ -23,7 +23,7 @@ hl.config({
 	},
 
 	general = {
-		layout = "master",
+		layout = "scrolling",
 	},
 
 	scrolling = {
