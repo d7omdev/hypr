@@ -146,41 +146,17 @@ for _, ns in ipairs({ "walker", "selection", "overview", "anyrun", "indicator.*"
 	hl.layer_rule({ name = "no-anim-" .. ns, match = { namespace = ns }, no_anim = true })
 end
 
--- gtk-layer-shell
-hl.layer_rule({ name = "blur-gtkls", match = { namespace = "gtk-layer-shell" }, blur = true, ignore_alpha = 0 })
+-- gtk-layer-shell (blur intentionally NOT applied — blur is Noctalia-only)
 hl.layer_rule({ name = "no-anim-gtk4ls", match = { namespace = "gtk4-layer-shell" }, no_anim = true })
 
--- Common blur namespaces
-local blurredLayers = {
-	{ ns = "launcher", alpha = 0.5 },
-	{ ns = "notifications", alpha = 0.69 },
-	{ ns = "session[0-9]*", alpha = nil },
-	{ ns = "bar[0-9]*", alpha = 0.6 },
-	{ ns = "barcorner.*", alpha = 0.6 },
-	{ ns = "dock[0-9]*", alpha = 0.6 },
-	{ ns = "indicator.*", alpha = 0.6 },
-	{ ns = "overview[0-9]*", alpha = 0.6 },
-	{ ns = "cheatsheet[0-9]*", alpha = 0.6 },
-	{ ns = "sideright[0-9]*", alpha = 0.6 },
-	{ ns = "sideleft[0-9]*", alpha = 0.6 },
-	{ ns = "osk[0-9]*", alpha = 0.6 },
-}
-for _, r in ipairs(blurredLayers) do
-	hl.layer_rule({
-		name = "blur-" .. r.ns,
-		match = { namespace = r.ns },
-		blur = true,
-		ignore_alpha = r.alpha,
-	})
-end
+-- NOTE: The old illogical-impulse/ags `blurredLayers` blur block was removed.
+-- Blur is now Noctalia-only and controlled by the BLUR toggle in lua/general.lua.
 
 -- ags slide directions
 hl.layer_rule({ name = "slide-l-sideleft", match = { namespace = "sideleft.*" }, animation = "slide left" })
 hl.layer_rule({ name = "slide-r-sideright", match = { namespace = "sideright.*" }, animation = "slide right" })
 
--- Quickshell (illogical-impulse)
-hl.layer_rule({ name = "qs-blur-popups", match = { namespace = "quickshell:.*" }, blur_popups = true })
-hl.layer_rule({ name = "qs-blur", match = { namespace = "quickshell:.*" }, blur = true, ignore_alpha = 0.79 })
+-- Quickshell (illogical-impulse) — blur intentionally NOT applied (Noctalia-only)
 hl.layer_rule({ name = "qs-bar-slide", match = { namespace = "quickshell:bar" }, animation = "slide" })
 hl.layer_rule({ name = "qs-actioncenter", match = { namespace = "quickshell:actionCenter" }, no_anim = true })
 hl.layer_rule({ name = "qs-cheatsheet", match = { namespace = "quickshell:cheatsheet" }, animation = "slide bottom" })
@@ -214,9 +190,7 @@ hl.layer_rule({ name = "qs-screenshot", match = { namespace = "quickshell:screen
 hl.layer_rule({
 	name = "qs-session",
 	match = { namespace = "quickshell:session" },
-	blur = true,
 	no_anim = true,
-	ignore_alpha = 0,
 })
 hl.layer_rule({ name = "qs-sidebarR", match = { namespace = "quickshell:sidebarRight" }, animation = "slide right" })
 hl.layer_rule({ name = "qs-sidebarL", match = { namespace = "quickshell:sidebarLeft" }, animation = "slide left" })
@@ -242,21 +216,8 @@ hl.layer_rule({
 	ignore_alpha = 0,
 })
 
--- Noctalia background layer
-hl.layer_rule({
-	name = "noctalia-bg",
-	match = { namespace = "noctalia-background-.*$" },
-	ignore_alpha = 0.1,
-	blur = true,
-	blur_popups = true,
-})
-
-hl.layer_rule({
-	name = "noctalia",
-	match = {
-		namespace = "^noctalia-(bar-.+|notification|dock|panel)$",
-	},
-	ignore_alpha = 0.5,
-	blur = true,
-	blur_popups = true,
-})
+-- Noctalia glass is owned ENTIRELY by the hyprglass plugin (see lua/plugins.lua),
+-- which whitelists exactly the surfaces we want glassed (panel host, bar, dock).
+-- No native decoration:blur rules for Noctalia here — a native rule matching
+-- notifications/osd was previously blurring those even though we don't want them.
+-- (BLUR=true is still required so hyprglass's layer renderer has the blur engine.)

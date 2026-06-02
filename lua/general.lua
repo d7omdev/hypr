@@ -2,6 +2,18 @@
 -- Maps from hyprland/general.conf.
 -- API: hl.config({ section = { key = value, ... } })
 
+-- ┌─────────────────────────────────────────────────────────────────────┐
+-- │  BLUR MASTER TOGGLE — Hyprland's native decoration:blur engine.     │
+-- │                                                                     │
+-- │  Currently nothing relies on it for layers: hyprglass LAYER glass    │
+-- │  is disabled (it could full-screen-blur and lock the session — see   │
+-- │  lua/plugins.lua), and there are no native Noctalia blur rules.      │
+-- │  hyprglass WINDOW glass is independent of this. Left ON as a no-op   │
+-- │  safety; set false if you want the engine fully off.                 │
+-- │  Reload after changing: CTRL+SUPER+R or `hyprctl reload`.            │
+-- └─────────────────────────────────────────────────────────────────────┘
+BLUR = false
+
 -- Default monitor (overridden by custom/general.lua for multi-monitor setup)
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 
@@ -40,7 +52,7 @@ hl.config({
 		rounding_power = 6,
 
 		blur = {
-			enabled = false,
+			enabled = BLUR,
 			xray = false,
 			special = false,
 			new_optimizations = true,

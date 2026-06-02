@@ -13,8 +13,9 @@ hl.window_rule({ name = "clipse-border", match = { class = "^(clipse)$" }, borde
 hl.window_rule({ name = "ws-spotify", match = { class = "^(Spotify)$" }, workspace = "10" })
 hl.window_rule({ name = "ws-postman", match = { class = "^(Postman)$" }, workspace = "4" })
 hl.window_rule({ name = "ws-teams", match = { class = "^(teams-for-linux)$" }, workspace = "3" })
-hl.window_rule({ name = "kitty-blur", match = { class = "^(kitty)$" }, no_blur = false })
-hl.window_rule({ name = "zen-blur", match = { class = "^(zen)$" }, no_blur = false })
+-- Blur is Noctalia-only: keep windows unblurred (was no_blur = false).
+hl.window_rule({ name = "kitty-blur", match = { class = "^(kitty)$" }, no_blur = true })
+hl.window_rule({ name = "zen-blur", match = { class = "^(zen)$" }, no_blur = true })
 
 hl.window_rule({
 	name = "ente-auth",
