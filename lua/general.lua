@@ -40,7 +40,7 @@ hl.config({
 		rounding_power = 6,
 
 		blur = {
-			enabled = true,
+			enabled = false,
 			xray = false,
 			special = false,
 			new_optimizations = true,

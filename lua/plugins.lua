@@ -30,57 +30,28 @@ hl.plugin({
 
 	hyprexpo = {
 		columns = 3,
-		gaps_in = 5,
-		gaps_out = 0,
+		-- gap_size = 5,
 		bg_col = "rgb(111111)",
 		workspace_method = "center current",
-		gesture_distance = 200,
-		cancel_key = "escape",
-		show_cursor = 1,
+	},
+
+	hyprglass = {
+		enabled = 1,
+		blur_strength = 1,
+		blur_iterations = 1,
+		refraction_strength = 2.5,
+		chromatic_aberration = 0.4,
+		lens_distortion = 1,
+		edge_thickness = 0.018,
+		fresnel_strength = 1,
+		specular_strength = 1,
+		tint_color = 0x00000000,
+		glass_opacity = 1,
+		brightness = 1,
+		contrast = 1.0,
+		saturation = 1.0,
+		vibrancy = 0.0,
+		adaptive_dim = 0.0,
+		adaptive_boost = 0.0,
 	},
 })
-
-if hl.plugin.hyprglass then
-	local hg = hl.plugin.hyprglass
-
-	hg.config({
-		enabled = false,
-		default_theme = "dark",
-		default_preset = "clear",
-		tint_color = 0x8899aa22,
-		brightness = 0.9,
-		dark = { brightness = 0.82 },
-		light = { adaptive_boost = 0.5 },
-
-		layers = { enabled = 1 },
-	})
-
-	-- Layer surfaces: each call whitelists the namespace and configures it
-	hg.layer("waybar", { preset = "subtle", mask_threshold = 0.05 })
-	hg.layer("swaync")
-	hg.layer("quickshell:bezel", { preset = "ui", mask_threshold = 0.3 })
-	hg.layer("debug-panel", { exclude = true })
-
-	-- Presets
-	hg.preset("clear", {
-		glass_opacity = 0.78,
-		blur_strength = 0.1,
-		blur_iterations = 4,
-		refraction_strength = 0.3,
-		chromatic_aberration = 0.6,
-		fresnel_strength = 0.8,
-		specular_strength = 0.9,
-		-- lens_distortion = 0.7,
-		edge_thickness = 0.08,
-
-		dark = { brightness = 0.78, saturation = 0.7 },
-		light = { brightness = 1.1, saturation = 0.8 },
-	})
-
-	hg.preset("contrasted", {
-		inherits = "high_contrast",
-		contrast = 1.2,
-		adaptive_dim = 1.5,
-		dark = { tint_color = 0x02142aa9 },
-	})
-end
