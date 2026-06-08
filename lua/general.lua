@@ -5,12 +5,12 @@
 -- ┌─────────────────────────────────────────────────────────────────────┐
 -- │  BLUR MASTER TOGGLE — Hyprland's native decoration:blur engine.     │
 -- │                                                                     │
--- │  Currently nothing relies on it for layers: hyprglass LAYER glass    │
--- │  is disabled (it could full-screen-blur and lock the session — see   │
--- │  lua/plugins.lua), and there are no native Noctalia blur rules.      │
--- │  hyprglass WINDOW glass is independent of this. Left ON as a no-op   │
--- │  safety; set false if you want the engine fully off.                 │
--- │  Reload after changing: CTRL+SUPER+R or `hyprctl reload`.            │
+-- │  Currently nothing relies on it for layers: hyprglass LAYER glass   │
+-- │  is disabled (it could full-screen-blur and lock the session — see  │
+-- │  lua/plugins.lua), and there are no native Noctalia blur rules.     │
+-- │  hyprglass WINDOW glass is independent of this. Left ON as a no-op  │
+-- │  safety; set false if you want the engine fully off.                │
+-- │  Reload after changing: CTRL+SUPER+R or `hyprctl reload`.           │
 -- └─────────────────────────────────────────────────────────────────────┘
 BLUR = false
 
