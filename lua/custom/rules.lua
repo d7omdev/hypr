@@ -53,9 +53,13 @@ hl.layer_rule({ name = "noctalia-bg-alpha", match = { namespace = "noctalia-back
 -- bar (effective alpha > 0.4) but NOT the single-rectangle 0.3 dock, which was
 -- the tell. `blur = true` alone (no ignore_alpha) also showed nothing.
 -- overview (the app launcher) is included below: it's fullscreen but MASKED to
--- its panel region, so native blur frosts only the launcher. Still excluded:
--- settings/session (fullscreen, unmasked → would blur the whole screen),
--- wallpaperSelector, polkit, regionSelector (blur pointless/harmful there).
+-- its panel region, so native blur frosts only the launcher.
+-- settings is ALSO included: it's a fullscreen layer but its backdrop is fully
+-- transparent (color: "transparent", alpha 0 — just a click-catcher), so
+-- ignore_alpha=0.15 bounds the blur to the centered ~0.3-alpha card only, never
+-- the whole screen. No mask needed. Still excluded: session (fullscreen with an
+-- opaque dim → would blur everything), wallpaperSelector, polkit, regionSelector
+-- (blur pointless/harmful there).
 for _, ns in ipairs({
 	"quickshell:bar",
 	"quickshell:verticalBar",
@@ -71,6 +75,7 @@ for _, ns in ipairs({
 	-- frosts only the launcher panel, not the whole screen. Safe with native
 	-- blur (the earlier exclusion was a hyprglass-input-trap concern, N/A here).
 	"quickshell:overview",
+	"quickshell:settings",
 }) do
 	hl.layer_rule({ name = "qs-glass-blur-" .. ns, match = { namespace = ns }, blur = true })
 	hl.layer_rule({ name = "qs-glass-alpha-" .. ns, match = { namespace = ns }, ignore_alpha = 0.15 })
