@@ -75,5 +75,5 @@ hl.animation({
 	style = "slidevert",
 })
 hl.animation({ leaf = "zoomFactor", enabled = true, speed = 3, bezier = "standardDecel" })
-hl.animation({ leaf = "hyprfocusIn", enabled = true, speed = 1.7, bezier = "bezIn" })
-hl.animation({ leaf = "hyprfocusOut", enabled = true, speed = 3, bezier = "bezOut" })
+-- hl.animation({ leaf = "hyprfocusIn", enabled = true, speed = 1.7, bezier = "bezIn" })
+-- hl.animation({ leaf = "hyprfocusOut", enabled = true, speed = 3, bezier = "bezOut" })
