@@ -1,35 +1,45 @@
--- Hyprland 0.55+ Lua entry point.
--- Activated via: mv hyprland.lua.draft hyprland.lua && mv hyprland.conf hyprland.conf.bak
--- Test in nested session first: Hyprland -c $HOME/.config/hypr/hyprland.lua.draft
---
--- Load order mirrors the old hyprland.conf source order:
---   1. defaults (lua/)
---   2. custom overrides (lua/custom/)
---   3. plugin settings
---   4. HyprMod-managed GUI overrides — LAST so the tool wins, matching
---      `source = hyprland-gui.conf` at the bottom of the old conf.
+-- This file sources other files in `hyprland` and `custom` folders
+-- You wanna add your stuff in files in `custom`
 
--- Make lua/ requireable.
-package.path = os.getenv("HOME") .. "/.config/hypr/lua/?.lua;" .. package.path
+-- Internal stuff --
+require("hyprland.lib")
+require("hyprland.services")
 
--- Defaults
-require("env")
-require("execs")
-require("general")
-require("animations")
-require("rules")
-require("colors")
-require("keybinds")
+-- Environment variables --
+require("hyprland.env")
+if is_file_exists(HOME .. "/.config/hypr/custom/env.lua") then
+	require("custom.env")
+end
 
--- Custom overrides
-require("custom.env")
-require("custom.execs")
-require("custom.general")
-require("custom.rules")
-require("custom.keybinds")
+-- Default configurations --
+require("hyprland.execs")
+require("hyprland.general")
+require("hyprland.rules")
+require("hyprland.colors")
+require("hyprland.keybinds")
+require("hyprland.plugins")
 
--- Plugin settings (no-op until plugin loaded via hyprpm)
-require("plugins")
+-- Custom configurations --
+if is_file_exists(HOME .. "/.config/hypr/custom/execs.lua") then
+	require("lua.custom.execs")
+end
+if is_file_exists(HOME .. "/.config/hypr/custom/general.lua") then
+	require("lua.custom.general")
+end
+if is_file_exists(HOME .. "/.config/hypr/custom/rules.lua") then
+	require("lua.custom.rules")
+end
+if is_file_exists(HOME .. "/.config/hypr/custom/keybinds.lua") then
+	require("lua.custom.keybinds")
+end
 
--- HyprMod GUI overrides — load LAST
-require("gui")
+-- nwg-displays support --
+if is_file_exists(HOME .. "/.config/hypr/workspaces.lua") then
+	require("workspaces")
+end
+if is_file_exists(HOME .. "/.config/hypr/monitors.lua") then
+	require("monitors")
+end
+
+-- Shell overrides --
+require("hyprland.shellOverrides.main")
