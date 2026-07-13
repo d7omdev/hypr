@@ -1,0 +1,175 @@
+diff --git a/GlobalStates.qml b/GlobalStates.qml
+index 0d5fbc3..d465170 100644
+--- a/GlobalStates.qml
++++ b/GlobalStates.qml
+@@ -17,6 +17,7 @@ Singleton {
+     property bool osdBrightnessOpen: false
+     property bool settingsOpen: false
+     property bool osdVolumeOpen: false
++    property bool osdLanguageOpen: false
+     property bool oskOpen: false
+     property bool overlayOpen: false
+     property bool overviewOpen: false
+diff --git a/modules/ii/onScreenDisplay/LanguageOsd.qml b/modules/ii/onScreenDisplay/LanguageOsd.qml
+new file mode 100644
+index 0000000..a319885
+--- /dev/null
++++ b/modules/ii/onScreenDisplay/LanguageOsd.qml
+@@ -0,0 +1,145 @@
++import qs
++import qs.services
++import qs.modules.common
++import qs.modules.common.widgets
++import QtQuick
++import QtQuick.Layouts
++import Quickshell
++import Quickshell.Io
++import Quickshell.Wayland
++import Quickshell.Hyprland
++
++// Small centered OSD that flashes the keyboard layout name whenever it changes
++// (e.g. Alt+Shift → Arabic). Driven off the HyprlandXkb singleton, which already
++// parses Hyprland's `activelayout` events, so we only react to its exposed name.
++Scope {
++    id: root
++
++    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
++    property string layoutName: ""
++
++    // Skip the service's initial population (it sets currentLayoutName once on
++    // startup); only flash on genuine user switches after we're armed.
++    property bool armed: false
++    Timer {
++        interval: 1500
++        running: true
++        repeat: false
++        onTriggered: root.armed = true
++    }
++
++    Timer {
++        id: hideTimeout
++        interval: 1300
++        repeat: false
++        onTriggered: GlobalStates.osdLanguageOpen = false
++    }
++
++    function flash(name) {
++        if (!name)
++            return;
++        root.layoutName = name;
++        GlobalStates.osdLanguageOpen = true;
++        hideTimeout.restart();
++    }
++
++    Connections {
++        target: HyprlandXkb
++        function onCurrentLayoutNameChanged() {
++            if (!root.armed)
++                return;
++            root.flash(HyprlandXkb.currentLayoutName);
++        }
++    }
++
++    Loader {
++        id: osdLoader
++        active: GlobalStates.osdLanguageOpen
++
++        sourceComponent: PanelWindow {
++            id: osdRoot
++            color: "transparent"
++            visible: osdLoader.active
++            screen: root.focusedScreen
++
++            Connections {
++                target: root
++                function onFocusedScreenChanged() {
++                    osdRoot.screen = root.focusedScreen;
++                }
++            }
++
++            // Non-"quickshell:" namespace on purpose: the base rules blur + ignore_alpha
++            // every "quickshell:.*" layer, which we DON'T want here. This name only picks
++            // up the global xray=true rule, which lua/custom/rules.lua overrides to false.
++            WlrLayershell.namespace: "osdLanguage"
++            WlrLayershell.layer: WlrLayer.Overlay
++            exclusionMode: ExclusionMode.Ignore
++            exclusiveZone: 0
++
++            // Content-sized, pinned to the bottom-center of the focused screen.
++            anchors {
++                bottom: true
++            }
++            margins {
++                bottom: Appearance.sizes.barHeight + Appearance.sizes.elevationMargin * 2
++            }
++
++            implicitWidth: pill.implicitWidth + Appearance.sizes.elevationMargin * 2
++            implicitHeight: pill.implicitHeight + Appearance.sizes.elevationMargin * 2
++
++            // Passive display — empty input region so clicks pass through.
++            mask: Region {}
++
++            StyledRectangularShadow {
++                target: pill
++            }
++            Rectangle {
++                id: pill
++                anchors.centerIn: parent
++                property real padding: 14
++                implicitWidth: pillRow.implicitWidth + padding * 2
++                implicitHeight: pillRow.implicitHeight + padding * 2
++                radius: Appearance.rounding.normal
++                // Opaque surface — reads cleanly without native blur behind it.
++                color: Appearance.m3colors.m3surfaceContainer
++                border.width: 1
++                border.color: Appearance.colors.colLayer0Border
++
++                opacity: GlobalStates.osdLanguageOpen ? 1 : 0
++                scale: GlobalStates.osdLanguageOpen ? 1 : 0.9
++                Behavior on opacity {
++                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
++                }
++                Behavior on scale {
++                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
++                }
++
++                RowLayout {
++                    id: pillRow
++                    anchors.centerIn: parent
++                    spacing: 10
++
++                    MaterialSymbol {
++                        text: "translate"
++                        iconSize: Appearance.font.pixelSize.hugeass
++                        color: Appearance.m3colors.m3onSurface
++                        Layout.alignment: Qt.AlignVCenter
++                    }
++                    StyledText {
++                        text: root.layoutName
++                        font.pixelSize: Appearance.font.pixelSize.large
++                        color: Appearance.m3colors.m3onSurface
++                        Layout.alignment: Qt.AlignVCenter
++                    }
++                }
++            }
++        }
++    }
++
++    IpcHandler {
++        target: "osdLanguage"
++        function trigger(): void { root.flash(HyprlandXkb.currentLayoutName); }
++        function hide(): void    { GlobalStates.osdLanguageOpen = false; }
++    }
++}
+diff --git a/panelFamilies/IllogicalImpulseFamily.qml b/panelFamilies/IllogicalImpulseFamily.qml
+index 514b722..ea2ffc5 100644
+--- a/panelFamilies/IllogicalImpulseFamily.qml
++++ b/panelFamilies/IllogicalImpulseFamily.qml
+@@ -31,6 +31,7 @@ Scope {
+     PanelLoader { component: MediaControls {} }
+     PanelLoader { component: NotificationPopup {} }
+     PanelLoader { component: OnScreenDisplay {} }
++    PanelLoader { component: LanguageOsd {} }
+     PanelLoader { component: OnScreenKeyboard {} }
+     PanelLoader { component: Overlay {} }
+     PanelLoader { component: Overview {} }

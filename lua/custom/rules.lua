@@ -81,6 +81,11 @@ for _, ns in ipairs({
 	hl.layer_rule({ name = "qs-glass-alpha-" .. ns, match = { namespace = ns }, ignore_alpha = 0.15 })
 end
 
+-- Language-switch OSD (end4-pC LanguageOsd.qml). Deliberately uses a
+-- non-"quickshell:" namespace so it escapes the quickshell:.* blur+ignore_alpha
+-- glass rules. Override the global xray=true so it's a plain opaque pill.
+hl.layer_rule({ name = "osd-language-noxray", match = { namespace = "osdLanguage" }, xray = false })
+
 -- Openscreen presentation mode (toggleable via rule handle).
 -- Original was a named windowrule with no selector, toggled from a script.
 -- Lua: keep a handle, start disabled, toggle with openscreenRule:set_enabled(true/false).
