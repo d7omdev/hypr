@@ -58,7 +58,7 @@ hl.layer_rule({ name = "noctalia-bg-alpha", match = { namespace = "noctalia-back
 -- transparent (color: "transparent", alpha 0 — just a click-catcher), so
 -- ignore_alpha=0.15 bounds the blur to the centered ~0.3-alpha card only, never
 -- the whole screen. No mask needed. Still excluded: session (fullscreen with an
--- opaque dim → would blur everything), wallpaperSelector, polkit, regionSelector
+-- opaque dim → would blur everything), polkit, regionSelector
 -- (blur pointless/harmful there).
 for _, ns in ipairs({
 	"quickshell:bar",
@@ -76,6 +76,15 @@ for _, ns in ipairs({
 	-- blur (the earlier exclusion was a hyprglass-input-trap concern, N/A here).
 	"quickshell:overview",
 	"quickshell:settings",
+	-- cheatsheet = same safe shape as settings/overview: fullscreen layer, color
+	-- "transparent", mask clipped to a centered colLayer0 card. ignore_alpha=0.15
+	-- frosts only that card, never the whole screen.
+	"quickshell:cheatsheet",
+	-- wallpaperSelector = bounded panel, color "transparent" + mask clipped to
+	-- its content card (colLayer0 ~0.3 alpha), so ignore_alpha=0.15 frosts only
+	-- the card, never the screen. Thumbnails are opaque (>0.15) so their blur is
+	-- hidden under them. Safe with native blur (old exclusion was hyprglass-only).
+	"quickshell:wallpaperSelector",
 }) do
 	hl.layer_rule({ name = "qs-glass-blur-" .. ns, match = { namespace = ns }, blur = true })
 	hl.layer_rule({ name = "qs-glass-alpha-" .. ns, match = { namespace = ns }, ignore_alpha = 0.15 })

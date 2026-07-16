@@ -1,0 +1,616 @@
+diff --git a/modules/common/Persistent.qml b/modules/common/Persistent.qml
+index 806dd6e..00ddff4 100644
+--- a/modules/common/Persistent.qml
++++ b/modules/common/Persistent.qml
+@@ -85,6 +85,7 @@ Singleton {
+ 
+             property JsonObject record: JsonObject {
+                 property bool enable: false
++                property int start: 0 // Epoch seconds the recording began; 0 when idle
+             }
+ 
+             property JsonObject overlay: JsonObject {
+diff --git a/modules/common/widgets/StyledClickPopup.qml b/modules/common/widgets/StyledClickPopup.qml
+new file mode 100644
+index 0000000..0dc90bd
+--- /dev/null
++++ b/modules/common/widgets/StyledClickPopup.qml
+@@ -0,0 +1,143 @@
++import qs.modules.common
++import qs.modules.common.widgets
++import qs.modules.common.functions
++import QtQuick
++import QtQuick.Effects
++import Quickshell
++import Quickshell.Hyprland
++import Quickshell.Wayland
++
++/**
++ * Click-triggered sibling of StyledPopup.
++ *
++ * StyledPopup is hover-only (active while the mouse is over its target), so its
++ * content can't be clicked — moving the pointer onto it dismisses it. This
++ * variant is driven by an explicit `open` boolean instead, keeps the same
++ * bar-edge anchoring/clamping math, and adds a HyprlandFocusGrab so an
++ * outside click closes it (letting the content host real buttons).
++ *
++ * Usage:
++ *   StyledClickPopup {
++ *       id: pop
++ *       anchorItem: someBarButton
++ *       ColumnLayout { ... clickable rows ... }
++ *   }
++ *   // toggle with: pop.open = !pop.open   (or pop.close())
++ */
++LazyLoader {
++    id: root
++    property Item anchorItem
++    default property Item contentItem
++    property real popupBackgroundMargin: 0
++    property bool open: false
++    active: root.open
++
++    function close() { root.open = false }
++
++    readonly property bool barVertical: Config.options.bar.vertical
++    readonly property string barEdge: {
++        if (!barVertical) return Config.options.bar.bottom ? "bottom" : "top"
++        return Config.options.bar.bottom ? "right" : "left"
++    }
++    readonly property real barThickness: barVertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
++
++    component: PanelWindow {
++        id: popupWindow
++
++        // Bring contentItem reference into this scope
++        property Item innerContent: root.contentItem
++
++        color: "transparent"
++        anchors.left: root.barEdge !== "right"
++        anchors.right: root.barEdge === "right"
++        anchors.top: root.barEdge !== "bottom"
++        anchors.bottom: root.barEdge === "bottom"
++
++        implicitWidth: popupBackground.implicitWidth + Appearance.sizes.elevationMargin * 2 + root.popupBackgroundMargin
++        implicitHeight: popupBackground.implicitHeight + Appearance.sizes.elevationMargin * 2 + root.popupBackgroundMargin
++
++        readonly property real centerOffsetX: {
++            const base = root.QsWindow?.mapFromItem(
++                root.anchorItem,
++                (root.anchorItem.width - popupBackground.implicitWidth) / 2, 0
++            ).x ?? 0
++            const margin = Appearance.sizes.elevationMargin
++            const maxLeft = popupWindow.screen.width - popupBackground.implicitWidth - margin - 10
++            return Math.max(margin, Math.min(base, maxLeft))
++        }
++        readonly property real centerOffsetY: {
++            const base = root.QsWindow?.mapFromItem(
++                root.anchorItem,
++                0, (root.anchorItem.height - popupBackground.implicitHeight) / 2
++            ).y ?? 0
++            const margin = Appearance.sizes.elevationMargin
++            const maxTop = popupWindow.screen.height - popupBackground.implicitHeight - margin - 15
++            return Math.max(margin, Math.min(base, maxTop))
++        }
++
++        mask: Region {
++            item: popupBackground
++        }
++        exclusionMode: ExclusionMode.Ignore
++        exclusiveZone: 0
++
++        margins {
++            left: {
++                if (root.barEdge === "right") return 0
++                if (root.barEdge === "left") return root.barThickness
++                return centerOffsetX
++            }
++            top: {
++                if (root.barEdge === "bottom") return 0
++                if (root.barEdge === "top") return root.barThickness
++                return centerOffsetY
++            }
++            right: root.barEdge === "right" ? root.barThickness : 0
++            bottom: root.barEdge === "bottom" ? root.barThickness : 0
++        }
++        WlrLayershell.namespace: "quickshell:popup"
++        WlrLayershell.layer: WlrLayer.Overlay
++
++        // Dismiss on any click outside the popup.
++        HyprlandFocusGrab {
++            id: focusGrab
++            windows: [popupWindow]
++            active: root.open
++            onCleared: root.open = false
++        }
++
++        StyledRectangularShadow {
++            target: popupBackground
++        }
++
++        Rectangle {
++            id: popupBackground
++            readonly property real margin: 8
++
++            anchors {
++                fill: parent
++                leftMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.left)
++                rightMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.right)
++                topMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.top)
++                bottomMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.bottom)
++            }
++
++            // Use local reference instead of crossing LazyLoader scope boundary
++            implicitWidth: (popupWindow.innerContent?.implicitWidth ?? 0) + margin * 2
++            implicitHeight: (popupWindow.innerContent?.implicitHeight ?? 0) + margin * 2
++
++            color: Appearance.colors.colLayer1Base
++            radius: Appearance.rounding.normal + 4
++            border.width: 1
++            border.color: Appearance.colors.colLayer0Border
++
++            // Reparent content here once the window is ready
++            Component.onCompleted: {
++                if (popupWindow.innerContent) {
++                    popupWindow.innerContent.parent = popupBackground
++                    popupWindow.innerContent.anchors.centerIn = popupBackground
++                }
++            }
++        }
++    }
++}
+diff --git a/modules/ii/bar/ScreenRecordButton.qml b/modules/ii/bar/ScreenRecordButton.qml
+new file mode 100644
+index 0000000..5181af4
+--- /dev/null
++++ b/modules/ii/bar/ScreenRecordButton.qml
+@@ -0,0 +1,283 @@
++import qs
++import qs.services
++import qs.modules.common
++import qs.modules.common.widgets
++import QtQuick
++import QtQuick.Layouts
++import Quickshell
++
++/**
++* Bar screen-record button with a recording-mode selector.
++*
++* While recording, a click stops it (record.sh toggles off when wf-recorder is
++* already running). While idle, a click opens a popup offering a sound switch
++* and two capture modes. The switch plus the chosen mode map onto flags
++* record.sh already understands:
++*   Region              -> (no flags)  interactive slurp select
++*   Fullscreen          -> --fullscreen
++*   ...plus --sound when the sound switch is on.
++*/
++Item {
++	id: root
++	property bool isMaterial: false
++	property bool vertical: false
++
++	property bool isRecording: Persistent.states.record.enable
++
++	// Elapsed time is derived from the start epoch record.sh stamps into
++	// states.json rather than counted locally, so it stays correct even if the
++	// shell reloads mid-recording. Same approach as timer.stopwatch.
++	property int recordStart: Persistent.states.record.start
++	property int nowSeconds: 0
++	readonly property int elapsedSeconds: (root.isRecording && root.recordStart > 0)
++	? Math.max(0, root.nowSeconds - root.recordStart)
++	: 0
++
++	// Drives the recording blink. Held at 1 while idle.
++	property real blink: 1
++
++	implicitWidth: layout.implicitWidth
++	implicitHeight: layout.implicitHeight
++
++	function formatTime(s) {
++		const h = Math.floor(s / 3600)
++		const m = Math.floor((s % 3600) / 60)
++		const sec = s % 60
++		const mm = m.toString().padStart(2, '0')
++		const ss = sec.toString().padStart(2, '0')
++		return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
++	}
++
++	// Stop when recording; otherwise toggle the mode menu.
++	function handleClick() {
++		if (root.isRecording) {
++			Quickshell.execDetached([Directories.recordScriptPath])
++		} else {
++			modePopup.open = !modePopup.open
++		}
++	}
++
++	function startMode(args) {
++		const flags = soundSwitch.checked ? args.concat(["--sound"]) : args
++		Quickshell.execDetached([Directories.recordScriptPath].concat(flags))
++		modePopup.close()
++	}
++
++	Timer {
++		interval: 1000
++		repeat: true
++		running: root.isRecording
++		triggeredOnStart: true // Seed nowSeconds immediately so we don't show a stale 00:00
++		onTriggered: root.nowSeconds = Math.floor(Date.now() / 1000)
++	}
++
++	SequentialAnimation on blink {
++		running: root.isRecording
++		loops: Animation.Infinite
++		alwaysRunToEnd: false
++		NumberAnimation { to: 0.35; duration: 700; easing.type: Easing.InOutSine }
++		NumberAnimation { to: 1.0; duration: 700; easing.type: Easing.InOutSine }
++	}
++	onIsRecordingChanged: if (!root.isRecording) root.blink = 1
++
++	// RowLayout rather than Row: a positioner owns its children's x and does not
++	// honour anchors, so vertical centring has to go through Layout.alignment.
++	RowLayout {
++		id: layout
++		anchors.centerIn: parent
++		spacing: 0
++
++		Loader {
++			id: variantLoader
++			Layout.alignment: Qt.AlignVCenter
++			sourceComponent: root.isMaterial ? m3Variant : legacyVariant
++		}
++
++		// Elapsed readout, shared by both variants. Hidden on a vertical bar,
++		// where there's no room for it.
++		Revealer {
++			id: timerRevealer
++			Layout.alignment: Qt.AlignVCenter
++			Layout.preferredWidth: implicitWidth
++			Layout.preferredHeight: implicitHeight
++			reveal: root.isRecording && !root.vertical
++
++			StyledText {
++				anchors.verticalCenter: parent.verticalCenter
++				leftPadding: 6
++				rightPadding: 6
++				text: root.formatTime(root.elapsedSeconds)
++				font.pixelSize: Appearance.font.pixelSize.small
++				font.features: { "tnum": 1 } // Tabular figures: digits don't jiggle as they tick
++				font.letterSpacing: -0.3
++				color: Appearance.colors.colError
++			}
++		}
++	}
++
++	Component {
++		id: m3Variant
++		UtilButton {
++			iconText: root.isRecording ? "stop_circle" : "screen_record"
++			forceHovered: root.isRecording || modePopup.open
++			colActive: root.isRecording ? Appearance.colors.colError : Appearance.colors.colPrimary
++			colOnActive: root.isRecording ? Appearance.colors.colOnError : Appearance.colors.colOnPrimary
++			opacity: root.isRecording ? root.blink : 1
++			onClicked: root.handleClick()
++		}
++	}
++
++	Component {
++		id: legacyVariant
++		CircleUtilButton {
++			id: btn
++			colBackground: root.isRecording ? Appearance.colors.colErrorContainer
++			: modePopup.open ? Appearance.colors.colPrimaryContainer
++			: "transparent"
++			buttonRadius: root.isRecording ? Appearance.rounding.normal : implicitHeight / 2
++			opacity: root.isRecording ? root.blink : 1
++			onClicked: root.handleClick()
++
++			Behavior on colBackground { ColorAnimation { duration: 200 } }
++			Behavior on buttonRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
++
++			MaterialSymbol {
++				horizontalAlignment: Qt.AlignHCenter
++				fill: 1
++				text: root.isRecording ? "stop_circle" : "screen_record"
++				iconSize: Appearance.font.pixelSize.large
++				color: root.isRecording ? Appearance.colors.colError : Appearance.colors.colOnLayer2
++				Behavior on color { ColorAnimation { duration: 200 } }
++			}
++		}
++	}
++
++	// ---- Mode selector ---------------------------------------------------
++	StyledClickPopup {
++		id: modePopup
++		anchorItem: root
++
++		// A plain Item wrapper gives the popup a definite content size to grow
++		// to; everything inside sizes off this fixed width rather than off the
++		// popup, which would be circular.
++		Item {
++			implicitWidth: 236
++			implicitHeight: contentColumn.implicitHeight
++
++			ColumnLayout {
++				id: contentColumn
++				anchors.left: parent.left
++				anchors.right: parent.right
++				anchors.top: parent.top
++				spacing: 8
++
++				RowLayout {
++					Layout.fillWidth: true
++					Layout.leftMargin: 4
++					spacing: 8
++
++					MaterialSymbol {
++						text: "screen_record"
++						iconSize: 20
++						fill: 1
++						color: Appearance.colors.colPrimary
++					}
++					StyledText {
++						Layout.fillWidth: true
++						text: Translation.tr("Screen record")
++						font.pixelSize: Appearance.font.pixelSize.normal
++						font.weight: Font.Medium
++						color: Appearance.colors.colOnLayer1
++					}
++				}
++
++				// Sound toggle — read by startMode() when a mode is picked.
++				RippleButton {
++					id: soundRow
++					Layout.fillWidth: true
++					implicitHeight: 40
++					horizontalPadding: 10
++					buttonRadius: Appearance.rounding.small
++					colBackground: Appearance.colors.colLayer2
++					colBackgroundHover: Appearance.colors.colLayer2Hover
++					releaseAction: () => soundSwitch.checked = !soundSwitch.checked
++
++					contentItem: RowLayout {
++						spacing: 10
++
++						MaterialSymbol {
++							text: soundSwitch.checked ? "volume_up" : "volume_off"
++							iconSize: 20
++							fill: 1
++							color: soundSwitch.checked ? Appearance.colors.colPrimary : Appearance.colors.colSubtext
++						}
++						StyledText {
++							Layout.fillWidth: true
++							text: Translation.tr("Sound")
++							font.pixelSize: Appearance.font.pixelSize.small
++							color: Appearance.colors.colOnLayer2
++						}
++						StyledSwitch {
++							id: soundSwitch
++							checked: false
++							// Let the row own the click so the whole strip is a target.
++							onClicked: soundRow.releaseAction()
++						}
++					}
++				}
++
++				RowLayout {
++					Layout.fillWidth: true
++					spacing: 8
++
++					ModeCard {
++						iconText: "screenshot_region"
++						label: Translation.tr("Region")
++						onChosen: root.startMode([])
++					}
++					ModeCard {
++						iconText: "fullscreen"
++						label: Translation.tr("Fullscreen")
++						onChosen: root.startMode(["--fullscreen"])
++					}
++				}
++			}
++		}
++	}
++
++	// One capture-mode tile. The contentItem carries NO anchors: a Control
++	// positions and resizes its own contentItem, so anchoring it to parent
++	// fights that and collapses the labels to zero width.
++	component ModeCard: RippleButton {
++		id: card
++		property string iconText
++		property string label
++		signal chosen()
++
++		Layout.fillWidth: true
++		implicitHeight: 68
++		buttonRadius: Appearance.rounding.small
++		colBackground: Appearance.colors.colLayer2
++		colBackgroundHover: Appearance.colors.colLayer2Hover
++		releaseAction: () => card.chosen()
++
++		contentItem: ColumnLayout {
++			spacing: 4
++
++			MaterialSymbol {
++				Layout.alignment: Qt.AlignHCenter
++				text: card.iconText
++				iconSize: 24
++				fill: 1
++				color: card.hovered ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer2
++				Behavior on color { ColorAnimation { duration: 150 } }
++			}
++			StyledText {
++				Layout.alignment: Qt.AlignHCenter
++				text: card.label
++				font.pixelSize: Appearance.font.pixelSize.smaller
++				color: Appearance.colors.colOnLayer2
++			}
++		}
++	}
++}
+diff --git a/modules/ii/bar/UtilButton.qml b/modules/ii/bar/UtilButton.qml
+index a5cf86e..1b0e325 100644
+--- a/modules/ii/bar/UtilButton.qml
++++ b/modules/ii/bar/UtilButton.qml
+@@ -12,6 +12,12 @@ Item {
+     property bool isActive: false
+     property bool forceHovered: false
+ 
++    // Accent used while hovered/forceHovered. Overridable so callers can signal
++    // a different state (e.g. red while recording); defaults preserve the
++    // standard primary look for every other util button.
++    property color colActive: Appearance.colors.colPrimary
++    property color colOnActive: Appearance.colors.colOnPrimary
++
+     implicitWidth: vertical ? 26 : (hovered ? 54 : 26)
+     implicitHeight: vertical ? (hovered ? 54 : 26) : 26
+ 
+@@ -34,7 +40,7 @@ Item {
+     Rectangle {
+         anchors.fill: parent
+         radius: Appearance.rounding.full
+-        color: root.hovered ? Appearance.colors.colPrimary : ColorUtils.transparentize(Appearance.colors.colLayer0, 0.8)
++        color: root.hovered ? root.colActive : ColorUtils.transparentize(Appearance.colors.colLayer0, 0.8)
+ 
+         Behavior on color {
+             ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+@@ -47,7 +53,7 @@ Item {
+             id: symbol
+             anchors.centerIn: parent
+             iconSize: Appearance.font.pixelSize.large
+-            color: root.hovered ? Appearance.colors.colOnPrimary : Appearance.colors.colPrimary
++            color: root.hovered ? root.colOnActive : root.colActive
+ 
+             Behavior on color {
+                 ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
+diff --git a/modules/ii/bar/UtilButtons.qml b/modules/ii/bar/UtilButtons.qml
+index 2391b1b..c055c56 100644
+--- a/modules/ii/bar/UtilButtons.qml
++++ b/modules/ii/bar/UtilButtons.qml
+@@ -79,82 +79,14 @@ Item {
+         Loader {
+             active: Config.options.bar.utilButtons.showScreenRecord
+             visible: active
+-            sourceComponent: isMaterial ? screenRecordM3 : legacyScreenRecord
++            sourceComponent: screenRecord
+         }
+ 
+         Component {
+-            id: legacyScreenRecord
+-            Item {
+-                id: recordingItem
+-                implicitWidth: btn.implicitWidth + timerRevealer.implicitWidth
+-                implicitHeight: btn.implicitHeight
+-
+-                property bool isRecording: Persistent.states.record.enable
+-                property int elapsedSeconds: 0
+-
+-                onIsRecordingChanged: {
+-                    if (!isRecording) elapsedSeconds = 0
+-                }
+-
+-                function formatTime(s) {
+-                    return Math.floor(s / 60).toString().padStart(2, '0') + ":" + (s % 60).toString().padStart(2, '0')
+-                }
+-
+-                Timer {
+-                    interval: 1000
+-                    repeat: true
+-                    running: recordingItem.isRecording
+-                    onTriggered: recordingItem.elapsedSeconds++
+-                }
+-
+-                CircleUtilButton {
+-                    id: btn
+-                    anchors.left: parent.left
+-                    anchors.verticalCenter: parent.verticalCenter
+-                    colBackground: recordingItem.isRecording ? Appearance.colors.colPrimaryContainer : "transparent"
+-                    buttonRadius: recordingItem.isRecording ? Appearance.rounding.normal : implicitHeight / 2
+-                    onClicked: Quickshell.execDetached([Directories.recordScriptPath])
+-
+-                    Behavior on colBackground { ColorAnimation { duration: 200 } }
+-                    Behavior on buttonRadius { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+-
+-                    MaterialSymbol {
+-                        horizontalAlignment: Qt.AlignHCenter
+-                        fill: 1
+-                        text: recordingItem.isRecording ? "stop_circle" : "screen_record"
+-                        iconSize: Appearance.font.pixelSize.large
+-                        color: recordingItem.isRecording ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer2
+-                        Behavior on color { ColorAnimation { duration: 200 } }
+-                    }
+-                }
+-
+-                Revealer {
+-                    id: timerRevealer
+-                    anchors.left: btn.right
+-                    anchors.leftMargin: 8
+-                    anchors.verticalCenter: btn.verticalCenter
+-                    reveal: recordingItem.isRecording && !root.vertical
+-
+-                    StyledText {
+-                        width: implicitWidth
+-                        text: recordingItem.formatTime(recordingItem.elapsedSeconds)
+-                        font.pixelSize: Appearance.font.pixelSize.small
+-                        font.features: { "tnum": 1 }
+-                        font.letterSpacing: -0.3
+-                        color: Appearance.colors.colOnLayer2
+-                        rightPadding: 8
+-                        Component.onCompleted: width = implicitWidth
+-                    }
+-                }
+-            }
+-        }
+-
+-        Component {
+-            id: screenRecordM3
+-            UtilButton {
+-                iconText: Persistent.states.record.enable ? "stop_circle" : "screen_record"
+-                forceHovered: Persistent.states.record.enable
+-                onClicked: Quickshell.execDetached([Directories.recordScriptPath])
++            id: screenRecord
++            ScreenRecordButton {
++                isMaterial: root.isMaterial
++                vertical: root.vertical
+             }
+         }
+ 
+diff --git a/scripts/videos/record.sh b/scripts/videos/record.sh
+index 3d0c100..17c7445 100755
+--- a/scripts/videos/record.sh
++++ b/scripts/videos/record.sh
+@@ -9,11 +9,15 @@ else
+     RECORDING_DIR="$HOME/Videos"
+ fi
+ 
++# Records the start epoch alongside the flag so the bar can derive elapsed time
++# itself (same pattern as timer.stopwatch/timer.pomodoro in states.json) instead
++# of us streaming ticks. 0 when not recording.
+ set_recording_state() {
+     local state=$1
++    local start=${2:-0}
+     local STATE_FILE="$HOME/.local/state/quickshell/states.json"
+     local tmp=$(mktemp)
+-    jq ".record.enable = $state" "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
++    jq ".record.enable = $state | .record.start = $start" "$STATE_FILE" > "$tmp" && mv "$tmp" "$STATE_FILE"
+ }
+ 
+ getdate() {
+@@ -55,7 +59,7 @@ if pgrep wf-recorder > /dev/null; then
+ else
+     if [[ $FULLSCREEN_FLAG -eq 1 ]]; then
+         notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown
+-        set_recording_state true
++        set_recording_state true "$(date +%s)"
+         if [[ $SOUND_FLAG -eq 1 ]]; then
+             wf-recorder -o "$(getactivemonitor)" --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -t --audio="$(getaudiooutput)"
+         else
+@@ -71,7 +75,7 @@ else
+             fi
+         fi
+         notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown
+-        set_recording_state true
++        set_recording_state true "$(date +%s)"
+         if [[ $SOUND_FLAG -eq 1 ]]; then
+             wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -t --geometry "$region" --audio="$(getaudiooutput)"
+         else
