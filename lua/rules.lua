@@ -134,7 +134,7 @@ hl.window_rule({
 
 ------------- WORKSPACE RULES -------------
 
-hl.workspace_rule({ workspace = "special:special", gaps_out = 1 })
+hl.workspace_rule({ workspace = "special:special", gaps_out = 10 })
 
 ------------- LAYER RULES -------------
 

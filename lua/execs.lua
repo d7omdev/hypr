@@ -8,7 +8,7 @@ hl.on("hyprland.start", function()
 	-- Plugins FIRST — hyprpm reload loads compiled plugins (.so) into the
 	-- running compositor. Must precede anything that depends on plugin
 	-- dispatchers/keywords (quickshell hyprbars buttons, hyprexpo binds, etc).
-	hl.exec_cmd("sleep 1 && hyprpm reload")
+	hl.exec_cmd("sleep 10 && hyprpm reload")
 
 	-- Bar / wallpaper
 	hl.exec_cmd(home .. "/.config/hypr/hyprland/scripts/start_geoclue_agent.sh")

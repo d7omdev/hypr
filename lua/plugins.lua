@@ -20,12 +20,20 @@ setmetatable(hl.plugin, {
 
 hl.plugin({
 
-	hyprfocus = {
-		mode = "flash",
-		only_on_monitor_change = false,
-		fade_opacity = 0.8,
-		bounce_strength = 0.95,
-		slide_height = 20,
+	-- hyprfocus = {
+	-- 	enabled = false,
+	-- 	mode = "flash",
+	-- 	only_on_monitor_change = false,
+	-- 	fade_opacity = 0.8,
+	-- 	bounce_strength = 0.95,
+	-- 	slide_height = 20,
+	-- },
+
+	hyprexpo = {
+		columns = 3,
+		-- gap_size = 5,
+		bg_col = "rgb(111111)",
+		workspace_method = "center current",
 	},
 })
 
