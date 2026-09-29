@@ -819,26 +819,6 @@ index 0000000..45d69cc
 +    'lanthanum': "Lanthanum",
 +    'actinium': "Actinium"
 +}
-diff --git a/panelFamilies/IllogicalImpulseFamily.qml b/panelFamilies/IllogicalImpulseFamily.qml
-index e8f590c..65ff0f3 100644
---- a/panelFamilies/IllogicalImpulseFamily.qml
-+++ b/panelFamilies/IllogicalImpulseFamily.qml
-@@ -4,6 +4,7 @@ import Quickshell
- import qs.modules.common
- import qs.modules.ii.background
- import qs.modules.ii.bar
-+import qs.modules.ii.cheatsheet
- import qs.modules.ii.dock
- import qs.modules.ii.lock
- import qs.modules.ii.mediaControls
-@@ -27,6 +28,7 @@ import qs.modules.ii.desktopMenu
- Scope {
-     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
-     PanelLoader { component: Background {} }
-+    PanelLoader { component: Cheatsheet {} }
-     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
-     PanelLoader { component: Lock {} }
-     PanelLoader { component: MediaControls {} }
 diff --git a/scripts/hyprland/get_keybinds.py b/scripts/hyprland/get_keybinds.py
 index cfe468d..cd6770c 100755
 --- a/scripts/hyprland/get_keybinds.py
@@ -1174,3 +1154,23 @@ index 6282b8a..8bf6aa3 100644
          children: [
              ...(defaultKeybinds.children ?? []),
              ...(userKeybinds.children ?? []),
+diff --git a/panelFamilies/IllogicalImpulseFamily.qml b/panelFamilies/IllogicalImpulseFamily.qml
+index ec618d1..a05c1e0 100644
+--- a/panelFamilies/IllogicalImpulseFamily.qml
++++ b/panelFamilies/IllogicalImpulseFamily.qml
+@@ -4,6 +4,7 @@ import Quickshell
+ import qs.modules.common
+ import qs.modules.ii.background
+ import qs.modules.ii.bar
++import qs.modules.ii.cheatsheet
+ import qs.modules.ii.dock
+ import qs.modules.ii.equalizer
+ import qs.modules.ii.lock
+@@ -30,6 +31,7 @@ import qs.modules.ii.frame
+ Scope {
+     PanelLoader { extraCondition: !Config.options.bar.vertical; component: Bar {} }
+     PanelLoader { component: Background {} }
++    PanelLoader { component: Cheatsheet {} }
+     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
+     PanelLoader { component: EqualizerPopup {} }
+     PanelLoader { component: Lock {} }

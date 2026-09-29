@@ -1,0 +1,35 @@
+diff --git a/sdata/dist-arch/illogical-impulse-quickshell-git/PKGBUILD b/sdata/dist-arch/illogical-impulse-quickshell-git/PKGBUILD
+index 3d6e83aa..3b07f57c 100644
+--- a/sdata/dist-arch/illogical-impulse-quickshell-git/PKGBUILD
++++ b/sdata/dist-arch/illogical-impulse-quickshell-git/PKGBUILD
+@@ -8,7 +8,7 @@ _prefix='illogical-impulse'
+ _pkgname=quickshell
+ pkgname="$_prefix-$_pkgname-git"
+ pkgver=0.1.0.r1
+-pkgrel=8
++pkgrel=9
+ pkgdesc="$_pkgname-git pinned commit and extra deps for $_prefix"
+ arch=(x86_64 aarch64)
+ url='https://git.outfoxxed.me/quickshell/quickshell'
+@@ -58,9 +58,19 @@ conflicts=("$_pkgname" "$_pkgname-git")
+ 
+ _pkgsrc="$_pkgname"
+ source=("$_pkgsrc::git+$url.git#commit=$_commit"
+-  quickshell-check.hook)
++  quickshell-check.hook
++  desktopentry-no-parent-watch.patch)
+ sha256sums=('SKIP'
+-  '8543e21aeaaa5441b73a679160e7601a957f16c433e8d6bd9257e80bd0e94083')
++  '8543e21aeaaa5441b73a679160e7601a957f16c433e8d6bd9257e80bd0e94083'
++  '764881a242160465e8f8eaffa7a887019aa407a49c36a4d79c5ac3c045c0289e')
++
++prepare() {
++  cd "$_pkgname"
++  # Stop watching every parent of the applications dirs ($HOME included) and
++  # dedupe XDG_DATA_DIRS: otherwise any file event in $HOME triggers a full
++  # .desktop rescan on the GUI thread, freezing the shell for seconds.
++  patch -p1 -i "$srcdir/desktopentry-no-parent-watch.patch"
++}
+ 
+ build() {
+   cd "$_pkgname"

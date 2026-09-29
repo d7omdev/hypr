@@ -1,0 +1,43 @@
+--- a/src/core/desktopentrymonitor.cpp	2026-09-29 15:12:28.186065362 +0300
++++ b/src/core/desktopentrymonitor.cpp	2026-09-29 15:12:28.300878285 +0300
+@@ -9,20 +9,6 @@
+ 
+ #include "desktopentry.hpp"
+ 
+-namespace {
+-void addPathAndParents(QFileSystemWatcher& watcher, const QString& path) {
+-	watcher.addPath(path);
+-
+-	auto p = QFileInfo(path).absolutePath();
+-	while (!p.isEmpty()) {
+-		watcher.addPath(p);
+-		const auto parent = QFileInfo(p).dir().absolutePath();
+-		if (parent == p) break;
+-		p = parent;
+-	}
+-}
+-} // namespace
+-
+ DesktopEntryMonitor::DesktopEntryMonitor(QObject* parent): QObject(parent) {
+ 	this->debounceTimer.setSingleShot(true);
+ 	this->debounceTimer.setInterval(100);
+@@ -46,7 +32,6 @@
+ void DesktopEntryMonitor::startMonitoring() {
+ 	for (const auto& path: DesktopEntryManager::desktopPaths()) {
+ 		if (!QDir(path).exists()) continue;
+-		addPathAndParents(this->watcher, path);
+ 		this->scanAndWatch(path);
+ 	}
+ }
+--- a/src/core/desktopentry.cpp	2026-09-29 15:12:28.238066077 +0300
++++ b/src/core/desktopentry.cpp	2026-09-29 15:12:28.300943423 +0300
+@@ -496,6 +496,9 @@
+ 			dataPaths.append(dir + "/applications");
+ 		}
+ 
++		// XDG_DATA_DIRS often carries repeated entries; scanning them again only duplicates work.
++		dataPaths.removeDuplicates();
++
+ 		return dataPaths;
+ 	}();
+ 

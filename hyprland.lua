@@ -21,16 +21,16 @@ require("hyprland.plugins")
 
 -- Custom configurations --
 if is_file_exists(HOME .. "/.config/hypr/custom/execs.lua") then
-	require("lua.custom.execs")
+	require("custom.execs")
 end
 if is_file_exists(HOME .. "/.config/hypr/custom/general.lua") then
-	require("lua.custom.general")
+	require("custom.general")
 end
 if is_file_exists(HOME .. "/.config/hypr/custom/rules.lua") then
-	require("lua.custom.rules")
+	require("custom.rules")
 end
 if is_file_exists(HOME .. "/.config/hypr/custom/keybinds.lua") then
-	require("lua.custom.keybinds")
+	require("custom.keybinds")
 end
 
 -- nwg-displays support --

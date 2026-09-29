@@ -1,1 +1,1 @@
-require("hyprland/services/create_custom_config")
+require("hyprland.services.create_custom_config")

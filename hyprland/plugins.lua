@@ -18,15 +18,15 @@ setmetatable(hl.plugin, {
 	end,
 })
 
-hl.plugin({
-	hyprfocus = {
-		mode = "flash",
-		only_on_monitor_change = false,
-		fade_opacity = 0.8,
-		bounce_strength = 0.95,
-		slide_height = 20,
-	},
-})
+-- hl.plugin({
+-- 	hyprfocus = {
+-- 		mode = "flash",
+-- 		only_on_monitor_change = false,
+-- 		fade_opacity = 0.8,
+-- 		bounce_strength = 0.95,
+-- 		slide_height = 20,
+-- 	},
+-- })
 
 -- hyprexpo disabled: conflicts with scrolloverview (both hook Hyprland's
 -- shared overview API — only one can own it at a time).
@@ -40,12 +40,13 @@ hl.plugin({
 -- matching (std::set::contains in main.cpp) — no regex, no substring. Each
 -- monitor has its own namespace suffix, so both must be listed explicitly.
 -- Get live namespaces with:  hyprctl layers | grep noctalia
+
 if hl.plugin.hyprglass then
 	local hg = hl.plugin.hyprglass
 
 	hg.config({
 		enabled = true,
-		blur_strength = 1,
+		blur_strength = 0.8,
 		blur_iterations = 1,
 		refraction_strength = 2.5,
 		chromatic_aberration = 0.4,
@@ -82,50 +83,12 @@ if hl.plugin.hyprglass then
 	hg.layer("noctalia-dock-peek-eDP-1")
 end
 
--- SCROLLOVERVIEW
+hl.bind("SUPER + TAB", hl.plugin.gloview.toggle)
+hl.bind("SUPER + SHIFT + TAB", hl.plugin.gloview.desktop)
+hl.bind("SUPER + CTRL + TAB", hl.plugin.gloview.allworkspaces)
 
-hl.config({
-	plugin = {
-		scrolloverview = {
-			gesture_distance = 300, -- how far is the "max" for the gesture
-			scale = 0.5, -- preferred overview scale
-			workspace_gap = 100,
-			layout = "vertical", -- vertical or horizontal
-			wallpaper = 0, -- 0: global only, 1: per-workspace only, 2: both
-			blur = false, -- blur only the main overview wallpaper
-
-			shadow = {
-				enabled = false,
-				range = 50,
-				render_power = 3,
-				color = 0xee1a1a1a,
-			},
-		},
-	},
-})
-
-hl.bind("SHIFT + SUPER + g", function()
-	hl.plugin.scrolloverview.overview("toggle")
+hl.bind("SUPER + bracketright", hl.plugin.gloview.next)
+hl.bind("SUPER + bracketleft", hl.plugin.gloview.prev)
+hl.bind("SUPER + 2", function()
+	hl.plugin.gloview.setworkspace(2)
 end)
-
-hl.define_submap("scrolloverview", function()
-	hl.bind("left", hl.plugin.scrolloverview.navigate("left"))
-	hl.bind("right", hl.plugin.scrolloverview.navigate("right"))
-	hl.bind("up", hl.plugin.scrolloverview.navigate("up"))
-	hl.bind("down", hl.plugin.scrolloverview.navigate("down"))
-	hl.bind("return", hl.plugin.scrolloverview.overview("select"))
-	hl.bind("escape", hl.plugin.scrolloverview.overview("off"))
-	hl.bind("mouse:272", function()
-		-- Select the clicked window, or just the workspace if no window was clicked, then close the overview. This is the default behaviour if submap is not defined.
-		hl.plugin.scrolloverview.overview("select")
-		hl.plugin.scrolloverview.window("select")
-		hl.plugin.scrolloverview.overview("off")
-	end, { mouse = true })
-	hl.bind("mouse:274", hl.plugin.scrolloverview.window("close"), { mouse = true })
-end)
-
--- Example Hyprland bind that keeps working inside the submap:
-for i = 1, 10 do
-	local key = i % 10
-	hl.bind("ALT + " .. key, hl.dsp.focus({ workspace = i }), { submap_universal = true })
-end

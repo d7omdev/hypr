@@ -1,5 +1,5 @@
 diff --git a/modules/common/Persistent.qml b/modules/common/Persistent.qml
-index 806dd6e..00ddff4 100644
+index 2792a0c..11f0baa 100644
 --- a/modules/common/Persistent.qml
 +++ b/modules/common/Persistent.qml
 @@ -85,6 +85,7 @@ Singleton {
@@ -161,7 +161,7 @@ index 0000000..0dc90bd
 +}
 diff --git a/modules/ii/bar/ScreenRecordButton.qml b/modules/ii/bar/ScreenRecordButton.qml
 new file mode 100644
-index 0000000..5181af4
+index 0000000..9547521
 --- /dev/null
 +++ b/modules/ii/bar/ScreenRecordButton.qml
 @@ -0,0 +1,283 @@
@@ -267,7 +267,7 @@ index 0000000..5181af4
 +			Layout.alignment: Qt.AlignVCenter
 +			Layout.preferredWidth: implicitWidth
 +			Layout.preferredHeight: implicitHeight
-+			reveal: root.isRecording && !root.vertical
++			reveal: root.isRecording && !root.vertical && !GlobalStates.dynamicIslandEnabled
 +
 +			StyledText {
 +				anchors.verticalCenter: parent.verticalCenter
@@ -484,10 +484,10 @@ index a5cf86e..1b0e325 100644
              Behavior on color {
                  ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
 diff --git a/modules/ii/bar/UtilButtons.qml b/modules/ii/bar/UtilButtons.qml
-index 2391b1b..c055c56 100644
+index 8e02b5a..937a92c 100644
 --- a/modules/ii/bar/UtilButtons.qml
 +++ b/modules/ii/bar/UtilButtons.qml
-@@ -79,82 +79,14 @@ Item {
+@@ -78,82 +78,14 @@ Item {
          Loader {
              active: Config.options.bar.utilButtons.showScreenRecord
              visible: active
@@ -546,7 +546,7 @@ index 2391b1b..c055c56 100644
 -                    anchors.left: btn.right
 -                    anchors.leftMargin: 8
 -                    anchors.verticalCenter: btn.verticalCenter
--                    reveal: recordingItem.isRecording && !root.vertical
+-                    reveal: recordingItem.isRecording && !root.vertical && !GlobalStates.dynamicIslandEnabled
 -
 -                    StyledText {
 -                        width: implicitWidth
@@ -576,7 +576,7 @@ index 2391b1b..c055c56 100644
          }
  
 diff --git a/scripts/videos/record.sh b/scripts/videos/record.sh
-index 3d0c100..17c7445 100755
+index 42eef74..db3a694 100755
 --- a/scripts/videos/record.sh
 +++ b/scripts/videos/record.sh
 @@ -9,11 +9,15 @@ else
@@ -596,7 +596,7 @@ index 3d0c100..17c7445 100755
  }
  
  getdate() {
-@@ -55,7 +59,7 @@ if pgrep wf-recorder > /dev/null; then
+@@ -72,7 +76,7 @@ if pgrep wf-recorder > /dev/null; then
  else
      if [[ $FULLSCREEN_FLAG -eq 1 ]]; then
          notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown
@@ -605,7 +605,7 @@ index 3d0c100..17c7445 100755
          if [[ $SOUND_FLAG -eq 1 ]]; then
              wf-recorder -o "$(getactivemonitor)" --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -t --audio="$(getaudiooutput)"
          else
-@@ -71,7 +75,7 @@ else
+@@ -88,7 +92,7 @@ else
              fi
          fi
          notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown

@@ -1,0 +1,92 @@
+diff --git a/modules/ii/overview/OverviewWindow.qml b/modules/ii/overview/OverviewWindow.qml
+index 4ec8639..9ffa1a2 100644
+--- a/modules/ii/overview/OverviewWindow.qml
++++ b/modules/ii/overview/OverviewWindow.qml
+@@ -14,6 +14,9 @@ Item { // Window
+     property var toplevel
+     property var windowData
+     property var monitorData
++    // Used by tiledCount; these live on OverviewWidget's root, which is not reachable from here.
++    property var windowAddresses: HyprlandData.addresses
++    property var windowByAddress: HyprlandData.windowByAddress
+     property var scale
+     property bool restrictToWorkspace: true
+     property real widthRatio: {
+@@ -28,12 +31,12 @@ Item { // Window
+     }
+     property real initX: {
+         if (singleTiled) return xOffset;
+-        return (windowData?.at[0] - (monitorData?.x ?? 0) - monitorData?.reserved[0]) * widthRatio * root.scale + xOffset;
++        return ((windowData?.at?.[0] ?? 0) - (monitorData?.x ?? 0) - (monitorData?.reserved?.[0] ?? 0)) * widthRatio * root.scale + xOffset;
+     }
+ 
+     property real initY: {
+         if (singleTiled) return yOffset;
+-        return Math.max((windowData?.at[1] - (monitorData?.y ?? 0) - monitorData?.reserved[1]) * heightRatio * root.scale, 0) + yOffset;
++        return Math.max(((windowData?.at?.[1] ?? 0) - (monitorData?.y ?? 0) - (monitorData?.reserved?.[1] ?? 0)) * heightRatio * root.scale, 0) + yOffset;
+     }
+     property real xOffset: 0
+     property real yOffset: 0
+@@ -47,8 +50,8 @@ Item { // Window
+         const wsId = windowData.workspace?.id;
+         if (!wsId) return 0;
+         let count = 0;
+-        for (const addr of root.windowAddresses) {
+-            const w = root.windowByAddress[addr];
++        for (const addr of (root.windowAddresses ?? [])) {
++            const w = root.windowByAddress?.[addr];
+             if (w && w.workspace?.id === wsId && !w.floating && !w.fullscreen) count++;
+         }
+         return count;
+@@ -59,13 +62,13 @@ Item { // Window
+         if (singleTiled && root.workspaceWidth > 0) {
+             return root.workspaceWidth;
+         }
+-        return windowData?.size[0] * scale * widthRatio;
++        return (windowData?.size?.[0] ?? 0) * scale * widthRatio;
+     }
+     property var targetWindowHeight: {
+         if (singleTiled && root.workspaceHeight > 0) {
+             return root.workspaceHeight;
+         }
+-        return windowData?.size[1] * scale * heightRatio;
++        return (windowData?.size?.[1] ?? 0) * scale * heightRatio;
+     }
+     property bool hovered: false
+     property bool pressed: false
+@@ -85,7 +88,7 @@ Item { // Window
+     y: initY
+     width: targetWindowWidth
+     height: targetWindowHeight
+-    opacity: windowData.monitor == widgetMonitorId ? 1 : 0.4
++    opacity: windowData?.monitor == widgetMonitorId ? 1 : 0.4
+ 
+     property real topLeftRadius
+     property real topRightRadius
+@@ -105,11 +108,11 @@ Item { // Window
+     }
+ 
+     Behavior on x {
+-        enabled: !window.Drag.active && !window.dragging
++        enabled: !root.Drag.active && !root.dragging
+         animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
+     }
+     Behavior on y {
+-        enabled: !window.Drag.active && !window.dragging
++        enabled: !root.Drag.active && !root.dragging
+         animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
+     }
+     Behavior on width {
+diff --git a/modules/ii/regionSelector/OptionsToolbar.qml b/modules/ii/regionSelector/OptionsToolbar.qml
+index 5a10c08..9f0794b 100644
+--- a/modules/ii/regionSelector/OptionsToolbar.qml
++++ b/modules/ii/regionSelector/OptionsToolbar.qml
+@@ -32,7 +32,7 @@ Toolbar {
+         onCurrentIndexChanged: {
+             const newMode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
+             if (root.selectionMode !== newMode)
+-                root.selectionMode = newMode;
++                Qt.callLater(() => root.selectionMode = newMode);
+         }
+     }
+ }

@@ -1,3 +1,6 @@
--- This file will not be overwritten across dots-hyprland updates.
--- The file name is for the sake of organization and does not matter
--- See the corresponding files in ~/.config/hypr/hyprland for examples
+-- Custom environment variables. Loaded after hyprland/env.lua, so anything
+-- set here wins.
+--
+-- Currently empty — kept as the designated place for machine-specific env
+-- overrides. hyprland/services/create_custom_config.lua recreates this file
+-- if it is ever deleted.

@@ -1,3 +1,43 @@
--- This file will not be overwritten across dots-hyprland updates.
--- The file name is for the sake of organization and does not matter
--- See the corresponding files in ~/.config/hypr/hyprland for examples
+-- Custom settings. Loaded after hyprland/general.lua, so anything set here
+-- wins over the defaults there.
+--
+-- NOTE: hyprland/shellOverrides/main.lua is loaded LAST of all and is written
+-- by the shell's settings GUI. Keys it manages (kb_layout, repeat_rate,
+-- gaps_in/out, blur, rounding, opacity, layout, touchpad bits) will override
+-- what is set here. Change those from the settings panel, not this file.
+
+-- Multi-monitor: explicit positions override the catch-all in hyprland/general.lua
+local HDMI_ON_RIGHT = true
+
+-- highres = biggest resolution, highest refresh at that resolution
+hl.monitor({ output = "eDP-1", mode = "highres", position = "0x0", scale = 1 })
+hl.monitor({ output = "HDMI-A-1", mode = "highres", position = HDMI_ON_RIGHT and "auto-right" or "auto-left", scale = 1 })
+
+hl.config({
+	input = {
+		kb_layout = "us,ara",
+		kb_options = "grp:alt_shift_toggle",
+		numlock_by_default = true,
+		repeat_delay = 250,
+		repeat_rate = 35,
+		special_fallthrough = true,
+		follow_mouse = 1,
+		touchpad = {
+			tap_to_click = true,
+			natural_scroll = false,
+			disable_while_typing = true,
+			clickfinger_behavior = true,
+			scroll_factor = 0.9,
+		},
+	},
+
+	general = {
+		layout = "scrolling",
+	},
+
+	scrolling = {
+		fullscreen_on_one_column = true,
+		column_width = 0.95,
+		direction = "right",
+	},
+})

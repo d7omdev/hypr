@@ -4,8 +4,16 @@ local home_dir = os.getenv("HOME")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 
 -- Applications
-local xdg_data_dirs_old = os.getenv("XDG_DATA_DIRS") or ""
-hl.env("XDG_DATA_DIRS", home_dir .. "/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:" .. xdg_data_dirs_old)
+-- Deduplicated: this file re-runs on every reload and the old value already
+-- contains these entries, so plain prepending grows the list without bound.
+local xdg_data_dirs, seen = {}, {}
+for dir in (home_dir .. "/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share:" .. (os.getenv("XDG_DATA_DIRS") or "")):gmatch("[^:]+") do
+	if not seen[dir] then
+		seen[dir] = true
+		xdg_data_dirs[#xdg_data_dirs + 1] = dir
+	end
+end
+hl.env("XDG_DATA_DIRS", table.concat(xdg_data_dirs, ":"))
 
 -- Themes
 hl.env("QT_QPA_PLATFORM", "wayland;xcb")
