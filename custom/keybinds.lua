@@ -34,8 +34,8 @@ hl.bind(
 	{ description = "App: Browser (dGPU)" }
 )
 hl.bind("SUPER + SHIFT + F", exec("figma-linux"), { description = "App: Figma" })
-hl.bind("SUPER + SHIFT + I", exec([[XDG_CURRENT_DESKTOP="gnome" gnome-control-center]]), {
-	description = "App: GNOME settings",
+hl.bind("SUPER + SHIFT + I", exec("XDG_CURRENT_DESKTOP=KDE systemsettings"), {
+	description = "App: KDE System Settings",
 })
 hl.bind("SUPER + CTRL + E", exec("HYPRSHOT_EDITOR=1 quickshell -c HyprQuickFrame -n"), {
 	description = "App: Screenshot editor",

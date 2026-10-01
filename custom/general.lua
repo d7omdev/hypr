@@ -11,7 +11,12 @@ local HDMI_ON_RIGHT = true
 
 -- highres = biggest resolution, highest refresh at that resolution
 hl.monitor({ output = "eDP-1", mode = "highres", position = "0x0", scale = 1 })
-hl.monitor({ output = "HDMI-A-1", mode = "highres", position = HDMI_ON_RIGHT and "auto-right" or "auto-left", scale = 1 })
+hl.monitor({
+	output = "HDMI-A-1",
+	mode = "highres",
+	position = HDMI_ON_RIGHT and "auto-right" or "auto-left",
+	scale = 1,
+})
 
 hl.config({
 	input = {
