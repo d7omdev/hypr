@@ -1,0 +1,15 @@
+diff --git a/scripts/theming/set-icon-theme.sh b/scripts/theming/set-icon-theme.sh
+index 588c093..dce00e0 100755
+--- a/scripts/theming/set-icon-theme.sh
++++ b/scripts/theming/set-icon-theme.sh
+@@ -27,6 +27,10 @@ EOF
+ 
+ gsettings set org.gnome.desktop.interface icon-theme "$theme" 2>/dev/null
+ 
++# kded6's gtkconfig module copies [Icons] Theme from kdeglobals into GTK/gsettings/xsettingsd
++# whenever a KDE app starts it, so skipping this reverts the theme on the next session.
++kwriteconfig6 --file kdeglobals --group Icons --key Theme "$theme" 2>/dev/null
++
+ set_ini_key "$HOME/.config/gtk-3.0/settings.ini" gtk-icon-theme-name "$theme"
+ set_ini_key "$HOME/.config/gtk-4.0/settings.ini" gtk-icon-theme-name "$theme"
+ 
