@@ -36,10 +36,9 @@ setmetatable(hl.plugin, {
 -- auto-injected once hyprpm has loaded the .so. The guard keeps the config
 -- valid if the plugin isn't loaded yet (no crash, just no glass).
 --
--- Layer surfaces are OFF by default and use EXACT full-string namespace
--- matching (std::set::contains in main.cpp) — no regex, no substring. Each
--- monitor has its own namespace suffix, so both must be listed explicitly.
--- Get live namespaces with:  hyprctl layers | grep noctalia
+-- Layer glass is OFF: with layers.enabled = true and an empty namespaces
+-- list the plugin glasses EVERY layer surface (quickshell bar/dock/popups).
+-- Window glass is unaffected.
 
 if hl.plugin.hyprglass then
 	local hg = hl.plugin.hyprglass
@@ -63,24 +62,8 @@ if hl.plugin.hyprglass then
 		adaptive_dim = 0.0,
 		adaptive_boost = 0.0,
 
-		-- ⚠️ Layer glass DISABLED — and should stay off.
-		-- All Noctalia popups are drawn inside ONE fullscreen PanelWindow
-		-- (`noctalia-background-<screen>`, MainScreen.qml) that also owns keyboard
-		-- focus. Glassing it could full-screen-blur AND trap input, making the
-		-- session inaccessible (this happened). hyprglass WINDOW glass is unaffected
-		-- and still works. The hg.layer() lines below are INERT while this is false;
-		-- they are kept only as notes for anyone who wants to retry layer glass.
-		layers = { enabled = true },
+		layers = { enabled = false },
 	})
-
-	-- ↓↓↓ INERT while layers.enabled = false above. Do not re-enable layer glass
-	-- without understanding the fullscreen-panel-host lockout risk described above.
-	local PANEL_MASK = 0.25
-	hg.layer("noctalia-background-eDP-1", { mask_threshold = PANEL_MASK })
-	hg.layer("noctalia-background-HDMI-A-1", { mask_threshold = PANEL_MASK })
-	hg.layer("noctalia-bar-content-eDP-1")
-	hg.layer("noctalia-bar-content-HDMI-A-1")
-	hg.layer("noctalia-dock-peek-eDP-1")
 end
 
 hl.bind("SUPER + TAB", hl.plugin.gloview.toggle)
