@@ -16,6 +16,13 @@ hl.window_rule({
 	float = true,
 	size = "monitor_w*0.30 monitor_h*0.50",
 })
+
+hl.window_rule({
+	name = "scrcpy",
+	match = { class = "^(scrcpy)$" },
+	float = true,
+})
+
 hl.window_rule({ name = "clipse-border", match = { class = "^(clipse)$" }, border_size = 2 })
 
 hl.window_rule({

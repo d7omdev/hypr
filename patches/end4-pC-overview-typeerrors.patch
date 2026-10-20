@@ -1,18 +1,8 @@
 diff --git a/modules/ii/overview/OverviewWindow.qml b/modules/ii/overview/OverviewWindow.qml
-index 4ec8639..9ffa1a2 100644
+index 77c0ffa..ce02aa4 100644
 --- a/modules/ii/overview/OverviewWindow.qml
 +++ b/modules/ii/overview/OverviewWindow.qml
-@@ -14,6 +14,9 @@ Item { // Window
-     property var toplevel
-     property var windowData
-     property var monitorData
-+    // Used by tiledCount; these live on OverviewWidget's root, which is not reachable from here.
-+    property var windowAddresses: HyprlandData.addresses
-+    property var windowByAddress: HyprlandData.windowByAddress
-     property var scale
-     property bool restrictToWorkspace: true
-     property real widthRatio: {
-@@ -28,12 +31,12 @@ Item { // Window
+@@ -30,12 +30,12 @@ Item { // Window
      }
      property real initX: {
          if (singleTiled) return xOffset;
@@ -27,7 +17,7 @@ index 4ec8639..9ffa1a2 100644
      }
      property real xOffset: 0
      property real yOffset: 0
-@@ -47,8 +50,8 @@ Item { // Window
+@@ -49,8 +49,8 @@ Item { // Window
          const wsId = windowData.workspace?.id;
          if (!wsId) return 0;
          let count = 0;
@@ -38,7 +28,7 @@ index 4ec8639..9ffa1a2 100644
              if (w && w.workspace?.id === wsId && !w.floating && !w.fullscreen) count++;
          }
          return count;
-@@ -59,13 +62,13 @@ Item { // Window
+@@ -61,13 +61,13 @@ Item { // Window
          if (singleTiled && root.workspaceWidth > 0) {
              return root.workspaceWidth;
          }
@@ -54,7 +44,7 @@ index 4ec8639..9ffa1a2 100644
      }
      property bool hovered: false
      property bool pressed: false
-@@ -85,7 +88,7 @@ Item { // Window
+@@ -87,7 +87,7 @@ Item { // Window
      y: initY
      width: targetWindowWidth
      height: targetWindowHeight
@@ -63,7 +53,7 @@ index 4ec8639..9ffa1a2 100644
  
      property real topLeftRadius
      property real topRightRadius
-@@ -105,11 +108,11 @@ Item { // Window
+@@ -107,11 +107,11 @@ Item { // Window
      }
  
      Behavior on x {
@@ -77,16 +67,3 @@ index 4ec8639..9ffa1a2 100644
          animation: Appearance.animation.elementMoveEnter.numberAnimation.createObject(this)
      }
      Behavior on width {
-diff --git a/modules/ii/regionSelector/OptionsToolbar.qml b/modules/ii/regionSelector/OptionsToolbar.qml
-index 5a10c08..9f0794b 100644
---- a/modules/ii/regionSelector/OptionsToolbar.qml
-+++ b/modules/ii/regionSelector/OptionsToolbar.qml
-@@ -32,7 +32,7 @@ Toolbar {
-         onCurrentIndexChanged: {
-             const newMode = currentIndex === 0 ? RegionSelection.SelectionMode.RectCorners : RegionSelection.SelectionMode.Circle;
-             if (root.selectionMode !== newMode)
--                root.selectionMode = newMode;
-+                Qt.callLater(() => root.selectionMode = newMode);
-         }
-     }
- }

@@ -1,0 +1,104 @@
+diff --git a/modules/ii/wallpaperSelector/LocalWallpaperGrid.qml b/modules/ii/wallpaperSelector/LocalWallpaperGrid.qml
+index ff201ab..6e1745d 100644
+--- a/modules/ii/wallpaperSelector/LocalWallpaperGrid.qml
++++ b/modules/ii/wallpaperSelector/LocalWallpaperGrid.qml
+@@ -24,6 +24,30 @@ Item {
+     property int columns: Config.options.wallpaperSelector.columns || 4
+     property real previewCellAspectRatio: 4 / 3
+ 
++    // Thumbnails are looked up by size bucket, so a bucket that was never generated
++    // leaves every tile blank. Regenerate whenever the folder or the cell size changes.
++    readonly property real thumbnailItemInset: (Appearance.sizes.wallpaperSelectorItemMargins + Appearance.sizes.wallpaperSelectorItemPadding) * 2
++    readonly property string thumbnailSizeName: (grid.cellWidth > thumbnailItemInset && grid.cellHeight > thumbnailItemInset)
++        ? Images.thumbnailSizeNameForDimensions(grid.cellWidth - thumbnailItemInset, grid.cellHeight - thumbnailItemInset)
++        : ""
++
++    Timer {
++        id: thumbnailUpdateTimer
++        interval: 200
++        onTriggered: {
++            if (root.thumbnailSizeName.length === 0) return;
++            Wallpapers.generateThumbnail(root.thumbnailSizeName);
++        }
++    }
++
++    onThumbnailSizeNameChanged: thumbnailUpdateTimer.restart()
++    Component.onCompleted: thumbnailUpdateTimer.restart()
++
++    Connections {
++        target: Wallpapers
++        function onDirectoryChanged() { thumbnailUpdateTimer.restart() }
++    }
++
+     Process {
+         id: deleteProc
+         property string filePath: ""
+diff --git a/modules/ii/wallpaperSelector/WallpaperDirectoryItem.qml b/modules/ii/wallpaperSelector/WallpaperDirectoryItem.qml
+index 194f4ec..ff1d946 100644
+--- a/modules/ii/wallpaperSelector/WallpaperDirectoryItem.qml
++++ b/modules/ii/wallpaperSelector/WallpaperDirectoryItem.qml
+@@ -84,27 +84,42 @@ MouseArea {
+                         sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
+                         layer.enabled: true
+ 
++                        // True while showing the full image because no thumbnail was cached.
++                        property bool usingFullImageFallback: false
++
++                        // No thumbnail cached yet (or generation failed): show the real
++                        // image instead of an empty tile. sourceSize keeps decoding cheap.
++                        onStatusChanged: {
++                            if (status !== Image.Error || usingFullImageFallback) return;
++                            usingFullImageFallback = true;
++                            source = sourcePath;
++                        }
++
++                        function reloadThumbnail() {
++                            usingFullImageFallback = false;
++                            source = "";
++                            source = thumbnailPath;
++                        }
++
+                         Connections {
+                             function onThumbnailGenerated(directory) {
+-                                if (thumbnailImage.status !== Image.Error)
++                                if (thumbnailImage.status !== Image.Error && !thumbnailImage.usingFullImageFallback)
+                                     return ;
+ 
+                                 if (FileUtils.parentDirectory(thumbnailImage.sourcePath) !== FileUtils.trimFileProtocol(directory))
+                                     return ;
+ 
+-                                thumbnailImage.source = "";
+-                                thumbnailImage.source = thumbnailImage.thumbnailPath;
++                                thumbnailImage.reloadThumbnail();
+                             }
+ 
+                             function onThumbnailGeneratedFile(filePath) {
+-                                if (thumbnailImage.status !== Image.Error)
++                                if (thumbnailImage.status !== Image.Error && !thumbnailImage.usingFullImageFallback)
+                                     return ;
+ 
+                                 if (Qt.resolvedUrl(thumbnailImage.sourcePath) !== Qt.resolvedUrl(filePath))
+                                     return ;
+ 
+-                                thumbnailImage.source = "";
+-                                thumbnailImage.source = thumbnailImage.thumbnailPath;
++                                thumbnailImage.reloadThumbnail();
+                             }
+ 
+                             target: Wallpapers
+diff --git a/modules/ii/wallpaperSelector/WallpaperSelectorContent.qml b/modules/ii/wallpaperSelector/WallpaperSelectorContent.qml
+index 067c12f..34f8deb 100644
+--- a/modules/ii/wallpaperSelector/WallpaperSelectorContent.qml
++++ b/modules/ii/wallpaperSelector/WallpaperSelectorContent.qml
+@@ -42,7 +42,10 @@ MouseArea {
+         const cellW = item?.cellWidth ?? (wallpaperGridBackground.width / root.columns);
+         const cellH = item?.cellHeight ?? (cellW / root.previewCellAspectRatio);
+         const thumbnailSizeName = Images.thumbnailSizeNameForDimensions(cellW - totalImageMargin, cellH - totalImageMargin);
+-        Wallpapers.setDirectory(`${Directories.pictures}/Wallpapers`);
++        if (root.source !== "local") {
++            // Online downloads land in the wallpapers folder; point the browser there first.
++            Wallpapers.setDirectory(`${Directories.pictures}/Wallpapers`);
++        }
+         Qt.callLater(() => Wallpapers.generateThumbnail(thumbnailSizeName));
+     }
+ 

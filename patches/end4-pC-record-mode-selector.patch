@@ -161,10 +161,10 @@ index 0000000..0dc90bd
 +}
 diff --git a/modules/ii/bar/ScreenRecordButton.qml b/modules/ii/bar/ScreenRecordButton.qml
 new file mode 100644
-index 0000000..9547521
+index 0000000..10fe3f6
 --- /dev/null
 +++ b/modules/ii/bar/ScreenRecordButton.qml
-@@ -0,0 +1,283 @@
+@@ -0,0 +1,284 @@
 +import qs
 +import qs.services
 +import qs.modules.common
@@ -188,6 +188,7 @@ index 0000000..9547521
 +	id: root
 +	property bool isMaterial: false
 +	property bool vertical: false
++	property color contentColor: Appearance.colors.colOnLayer2
 +
 +	property bool isRecording: Persistent.states.record.enable
 +
@@ -313,7 +314,7 @@ index 0000000..9547521
 +				fill: 1
 +				text: root.isRecording ? "stop_circle" : "screen_record"
 +				iconSize: Appearance.font.pixelSize.large
-+				color: root.isRecording ? Appearance.colors.colError : Appearance.colors.colOnLayer2
++				color: root.isRecording ? Appearance.colors.colError : root.contentColor
 +				Behavior on color { ColorAnimation { duration: 200 } }
 +			}
 +		}
@@ -484,10 +485,10 @@ index a5cf86e..1b0e325 100644
              Behavior on color {
                  ColorAnimation { duration: Appearance.animation.elementMoveFast.duration }
 diff --git a/modules/ii/bar/UtilButtons.qml b/modules/ii/bar/UtilButtons.qml
-index 8e02b5a..937a92c 100644
+index a02d3c4..7288e78 100644
 --- a/modules/ii/bar/UtilButtons.qml
 +++ b/modules/ii/bar/UtilButtons.qml
-@@ -78,82 +78,14 @@ Item {
+@@ -80,82 +80,15 @@ Item {
          Loader {
              active: Config.options.bar.utilButtons.showScreenRecord
              visible: active
@@ -536,7 +537,7 @@ index 8e02b5a..937a92c 100644
 -                        fill: 1
 -                        text: recordingItem.isRecording ? "stop_circle" : "screen_record"
 -                        iconSize: Appearance.font.pixelSize.large
--                        color: recordingItem.isRecording ? Appearance.colors.colPrimary : Appearance.colors.colOnLayer2
+-                        color: recordingItem.isRecording ? Appearance.colors.colPrimary : root.contentColor
 -                        Behavior on color { ColorAnimation { duration: 200 } }
 -                    }
 -                }
@@ -554,7 +555,7 @@ index 8e02b5a..937a92c 100644
 -                        font.pixelSize: Appearance.font.pixelSize.small
 -                        font.features: { "tnum": 1 }
 -                        font.letterSpacing: -0.3
--                        color: Appearance.colors.colOnLayer2
+-                        color: root.contentColor
 -                        rightPadding: 8
 -                        Component.onCompleted: width = implicitWidth
 -                    }
@@ -572,11 +573,12 @@ index 8e02b5a..937a92c 100644
 +            ScreenRecordButton {
 +                isMaterial: root.isMaterial
 +                vertical: root.vertical
++                contentColor: root.contentColor
              }
          }
  
 diff --git a/scripts/videos/record.sh b/scripts/videos/record.sh
-index 42eef74..db3a694 100755
+index 5fbf1bf..654e558 100755
 --- a/scripts/videos/record.sh
 +++ b/scripts/videos/record.sh
 @@ -9,11 +9,15 @@ else
@@ -596,21 +598,12 @@ index 42eef74..db3a694 100755
  }
  
  getdate() {
-@@ -72,7 +76,7 @@ if pgrep wf-recorder > /dev/null; then
- else
-     if [[ $FULLSCREEN_FLAG -eq 1 ]]; then
-         notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown
--        set_recording_state true
-+        set_recording_state true "$(date +%s)"
-         if [[ $SOUND_FLAG -eq 1 ]]; then
-             wf-recorder -o "$(getactivemonitor)" --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -t --audio="$(getaudiooutput)"
-         else
-@@ -88,7 +92,7 @@ else
-             fi
-         fi
-         notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'Recorder' & disown
--        set_recording_state true
-+        set_recording_state true "$(date +%s)"
-         if [[ $SOUND_FLAG -eq 1 ]]; then
-             wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -t --geometry "$region" --audio="$(getaudiooutput)"
-         else
+@@ -161,7 +165,7 @@ else
+     fi
+ 
+     notify-send "Starting recording" "recording_$(getdate).mp4" -a 'Recorder' & disown
+-    set_recording_state true
++    set_recording_state true "$(date +%s)"
+     wf-recorder "${RECORDER_ARGS[@]}"
+     set_recording_state false
+ fi
